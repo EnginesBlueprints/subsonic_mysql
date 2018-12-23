@@ -15,12 +15,39 @@
         "level": "alpha",
         "patch": 0
       }
-    }
+    },
+    "timestamp": "2018-12-23T16:23:24+11:00"
   },
   "software": {
     "base": {
+      "name": "subsonic",
+      "inherit": "https://raw.githubusercontent.com/EnginesBlueprints/subsonic/master/blueprint.json",
+      "framework": "openjdk8",
       "deployment_type": "web",
-      "http_protocol": "https_and_http"
-    }
+      "http_protocol": "https_and_http",
+      "memory": {
+        "required": 384,
+        "recommended": 400
+      }
+    },
+    "scripts": {
+      "start": {
+        "content": "#!/bin/bash\r\nPID_FILE=/tmp/subsonic.pid\r\nexport PID_FILE\r\n. /home/engines/functions/trap.sh\r\ncd /home/app/\r\njava_mem=`expr $Memory - 20`\r\n#PULSE_SERVER=`netstat -nr |grep -e ^0.0| awk '{print $2}'`\r\n#export PULSE_SERVER\r\nif ! test -h /home/fs/subsonic/home/transcode/ffmpeg\r\n then\r\n mkdir -p /home/fs/subsonic/home/transcode\r\n ln -fs /usr/bin/ffmpeg  /home/fs/subsonic/home/transcode/\r\n ln -fs /usr/bin/lame /home/fs/subsonic/home/transcode/\r\nfi\r\n\r\n/home/app/subsonic.sh --home=/home/fs/subsonic/home/ \\\r\n--port=4040 \\\r\n--max-memory=java_mem \\\r\n--pidfile=/tmp/subsonic.pid \\\r\n--default-music-folder=/home/fs/subsonic/music \\\r\n--default-podcast-folder=/home/fs/subsonic/podcast \\\r\n--default-playlist-folder=/home/fs/subsonic/playlist \\\r\n -Dsubsonic.db=jdbc:mysql://mysql:3306/_Engines_Environment(dbname)?user=_Engines_Environment(dbuser)&password=_Engines_Environment(dbpasswd)&characterEncoding=UTF-8\r\n\r\n\r\n\r\nstartup_complete\r\n#while ! test -f /home/engines/run/flags/sig_term -o -f /home/engines/run/flags/sig_quit\r\n#do\r\n# sleep 20 &\r\n wait\r\n#done\r\nshutdown_complete\r\nsleep 200\r\nexit"
+      }
+    },
+    "service_configurations": [
+      {
+        "publisher_namespace": "EnginesSystem",
+        "type_path": "database/sql/mysql",
+        "variables": {
+          "database_name": "_Engines_Builder(engine_name)",
+          "database_host": "_Engines_System(mysql_host)",
+          "db_username": "_Engines_Builder(engine_name)",
+          "db_password": "_Engines_System(random(10))",
+          "collation": "utf8_general_ci",
+          "full_access": "false"
+        }
+      }
+    ]
   }
 }
